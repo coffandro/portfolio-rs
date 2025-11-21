@@ -1,0 +1,3 @@
+[jobs.watch]
+command = ["make", "build-web"]
+need_stdout=true
