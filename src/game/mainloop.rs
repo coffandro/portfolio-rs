@@ -1,22 +1,24 @@
 use std::cell::RefCell;
+use std::ops::DerefMut;
 use std::rc::Rc;
 
-use log::{info, logger};
 use sdl2::Sdl;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+use crate::game::renderers::*;
 use crate::consts::*;
 use crate::math::Vector2;
 use super::state::State;
 
-pub fn setup() -> State {
+pub fn setup(level: LevelData) -> State {
     let state = State {
-        pos: Vector2::zero(),
-        dir: Vector2::up(),
+        pos: level.player.pos * GRID_SIZE,
+        dir: -level.player.dir,
         plane: Vector2::zero(),
         rect: Rect::new(0, 0, 10, 10),
+        level: level
     };
 
     return state;
@@ -25,7 +27,6 @@ pub fn setup() -> State {
 fn rotate(rot: f64, state: &mut State) {
     let rot_cos = rot.cos() as f32;
     let rot_sin = rot.sin() as f32;
-    info!("{}", state.dir);
 
     state.dir.x = (state.dir.x * rot_cos) - (state.dir.y * rot_sin);
     state.dir.y = (state.dir.x * rot_sin) + (state.dir.y * rot_cos);
@@ -34,8 +35,6 @@ fn rotate(rot: f64, state: &mut State) {
 
     state.dir.normalize();
     state.plane.normalize();
-
-    info!("{}", state.dir);
 }
 
 fn process_input(
@@ -74,14 +73,14 @@ fn process_input(
 
 pub fn main_loop(
     ctx: Rc<RefCell<Sdl>>, 
-    state: Rc<RefCell<State>>,
-    canvas: Rc<RefCell<Canvas<Window>>>,
+    rstate: Rc<RefCell<State>>,
+    rcanvas: Rc<RefCell<Canvas<Window>>>,
 ) -> impl FnMut() {
     let events = ctx.borrow_mut().event_pump().unwrap();
     
     move || {
-        let mut state = state.borrow_mut();
-        let mut canvas = canvas.borrow_mut();
+        let mut state = rstate.borrow_mut();
+        let mut canvas = rcanvas.borrow_mut();
         let mut vel = Vector2::zero();
 
         process_input(&events, &mut vel, &mut state);
@@ -93,12 +92,7 @@ pub fn main_loop(
         canvas.set_draw_color(BLACK);
         canvas.clear();
 
-        canvas.set_draw_color(WHITE);
-        let _ = canvas.draw_rect(state.rect);
-        let _ = canvas.draw_line(
-            state.pos.to_point(),
-            (state.pos + state.dir * 100.0).to_point()
-        );
+        draw(canvas.deref_mut(), state.deref_mut());
         
         canvas.present();
     }

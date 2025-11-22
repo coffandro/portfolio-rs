@@ -26,6 +26,21 @@ extern "C" {
     pub fn emscripten_cancel_main_loop();
 }
 
+// #[derive(Serialize, Deserialize)]
+// struct Player {
+//     pos: Vec<u32>,
+//     dir: Vec<u32>,
+// }
+
+// #[derive(Serialize, Deserialize)]
+// struct Level {
+//     walls: Vec<Vec<u32>>,
+//     textures: Vec<String>,
+//     player: Player,
+// }
+
+
+
 thread_local! {
     // This is where the data object will be kept during the scheduled looping. The storage structure is justified as follows
 

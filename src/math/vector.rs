@@ -1,10 +1,18 @@
-use std::{fmt::{Display, Formatter, Result}, ops::{Add, AddAssign, Mul}};
+use std::{fmt::{Display, Formatter, Result}, ops::{Add, AddAssign, Mul, Neg}};
 
 use sdl2::rect::Point;
+use serde::Deserialize;
 
+#[derive(Deserialize, Debug)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Vector2Combo {
+    pub a: Vector2,
+    pub b: Vector2
 }
 
 impl Vector2 {
@@ -117,6 +125,20 @@ impl Mul<f32> for Vector2 {
     }
 }
 
+impl Mul<i32> for Vector2 {
+    type Output = Vector2;
+
+    fn mul(self, other: i32) -> Vector2 {
+        let s = self.remove_nan();
+        let o = other as f32;
+
+        return Vector2 {
+            x: s.x * o,
+            y: s.y * o
+        }
+    }
+}
+
 impl Mul<Vector2> for Vector2 {
     type Output = Vector2;
 
@@ -128,6 +150,14 @@ impl Mul<Vector2> for Vector2 {
             x: s.x * o.x,
             y: s.y * o.y
         }
+    }
+}
+
+impl Neg for Vector2 {
+    type Output = Vector2;
+
+    fn neg(self) -> Self::Output {
+        return self * -1.0;
     }
 }
 

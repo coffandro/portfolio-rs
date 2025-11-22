@@ -9,7 +9,21 @@
 <script type="text/javascript">
     // a "var" named "Module" is required by Emscripten
     // see: https://emscripten.org/docs/api_reference/module.html
-    var Module = {canvas: document.getElementById('canvas')};
+    window.Module = {
+        canvas: document.getElementById('canvas'),
+        level_data: {},
+        onRuntimeInitialized() {
+            fetch('./levels/level1.json')
+            .then((response) => response.json())
+            .then((json) => {
+                window.Module["level_data"] = json;
+
+                console.log("Settings level data");
+                window.Module.ccall('set_level_data', null, ['string'], [JSON.stringify(window.Module.level_data)]);
+                window.Module.ccall('main');
+            });
+        }
+    };
 </script>
 
 <!-- This is the code compiled by emscripten. -->

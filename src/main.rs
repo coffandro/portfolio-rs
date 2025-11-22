@@ -3,21 +3,27 @@ mod emscripten;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use log::info;
+use portfolio::consts::LevelData;
 use portfolio::*;
+use sdl2::libc;
+use once_cell::sync::OnceCell;
 
-// Resources
-//     https://developer.mozilla.org/en-US/docs/WebAssembly/Rust_to_Wasm
-//     https://puddleofcode.com/story/definitive-guide-to-rust-sdl2-and-emscriptem/
+static STATE: OnceCell<State> = OnceCell::new();
 
-// To build locally:
-//     cargo run
+#[no_mangle]
+pub extern "C" fn set_level_data(ptr: *const libc::c_char) {
+    let s = unsafe { std::ffi::CStr::from_ptr(ptr) }
+        .to_str()
+        .unwrap()
+        .to_string();
 
-// To build for the web:
-//     rustup target add asmjs-unknown-emscripten
-//     export EMCC_CFLAGS="-s USE_SDL=2"
-//     cargo build --target asmjs-unknown-emscripten && open index.html
-//#![no_main]
-//#[unsafe(no_mangle)]
+    // deserialize JSON
+    let data: LevelData = serde_json::from_str(&s).unwrap();
+
+    STATE.set(setup(data)).ok();
+}
+
 fn main() {
     fern::Dispatch::new()
         .chain(std::io::stdout())
@@ -50,10 +56,17 @@ fn main() {
     };
 
     let ctx = Rc::new(RefCell::new(ctx));
-    let state = setup();
-    let state = Rc::new(RefCell::new(state));
     let canvas = Rc::new(RefCell::new(canvas));
+    let state = STATE.get().expect("State not initialized yet!");
+    let state = Rc::new(RefCell::new(state.clone()));
 
-    #[cfg(target_family = "wasm")]
-    emscripten::set_main_loop_callback(main_loop(Rc::clone(&ctx), Rc::clone(&state), Rc::clone(&canvas)));
+    info!("Starting mainloop");
+
+    emscripten::set_main_loop_callback(
+        main_loop(
+            Rc::clone(&ctx),
+            Rc::clone(&state),
+            Rc::clone(&canvas)
+        )
+    );
 }
