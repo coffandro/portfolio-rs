@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::ops::Deref;
 use std::ops::DerefMut;
 use std::rc::Rc;
 
@@ -113,20 +112,6 @@ pub fn main_loop(
 
         // Draw player and map
         draw(canvas.deref_mut(), state.deref_mut());
-
-        let res = raycast(
-            state.pos,
-            Vector2::down().rotated(state.dir),
-            state.deref().clone()
-        );
-        
-        canvas.set_draw_color(BLUE);
-        if let Some(res) = res {
-            let _ = canvas.draw_line(
-                state.pos.to_point(),
-                res.pos.to_point()
-            );
-        }
 
         canvas.present();
     }

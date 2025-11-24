@@ -57,13 +57,6 @@ impl Vector2 {
         }
     }
 
-    pub fn to_point(self) -> Point {
-        return Point::new(
-            self.x as i32,
-            self.y as i32
-        )
-    }
-
     pub fn normalize(&mut self) {
         let v = self.normalized();
 
@@ -90,6 +83,15 @@ impl Vector2 {
 
         self.x = v.x;
         self.y = v.y;
+    }
+}
+
+impl From<Vector2> for Point {
+    fn from(value: Vector2) -> Self {
+        return Point::new(
+            value.x as i32,
+            value.y as i32
+        )
     }
 }
 
