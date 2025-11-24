@@ -8,17 +8,24 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 
 use crate::game::renderers::*;
+use crate::game::phys::*;
 use crate::consts::*;
 use crate::math::Vector2;
 use super::state::State;
 
 pub fn setup(level: LevelData) -> State {
+    let t_level = LevelData {
+        walls: level.walls.iter().map(|x| x.clone() * GRID_SIZE).rev().collect(),
+        textures: level.textures,
+        player: level.player
+    };
+
     let state = State {
-        pos: level.player.pos * GRID_SIZE,
-        dir: -level.player.dir,
+        pos: t_level.player.pos * GRID_SIZE,
+        dir: -t_level.player.dir,
         plane: Vector2::zero(),
-        rect: Rect::new(0, 0, 10, 10),
-        level: level
+        rect: Rect::new(0, 0, PLAYER_SIZE, PLAYER_SIZE),
+        level: t_level
     };
 
     return state;
@@ -85,7 +92,7 @@ pub fn main_loop(
 
         process_input(&events, &mut vel, &mut state);
 
-        state.pos += vel;
+        attempt_move_to(vel, &mut state);
         state.rect.x = (state.pos.x as i32) - state.rect.w/2;
         state.rect.y = (state.pos.y as i32) - state.rect.h/2;
 

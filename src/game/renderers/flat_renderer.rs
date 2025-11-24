@@ -8,13 +8,15 @@ pub fn draw(
     state: &mut State,
 ) {
     canvas.set_draw_color(WHITE);
+    // Draw walls
     for wall in state.level.walls.iter() {
         let _ = canvas.draw_line(
-            wall.a.to_point() * GRID_SIZE,
-            wall.b.to_point() * GRID_SIZE
+            wall.a.to_point(),
+            wall.b.to_point()
         );
     }
 
+    // Draw player
     let _ = canvas.draw_rect(state.rect);
     let _ = canvas.draw_line(
         state.pos.to_point(),

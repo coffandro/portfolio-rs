@@ -1,11 +1,12 @@
 use sdl2::pixels::Color;
 
 use serde::Deserialize;
-use crate::math::{Vector2, Vector2Combo};
+use crate::math::{Vector2, Segment};
 
 pub const BLACK: Color = Color::RGB(0, 0, 0);
 pub const WHITE: Color = Color::RGB(255, 255, 255);
 pub const GRID_SIZE: i32 = 16;
+pub const PLAYER_SIZE: u32 = 10;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct LevelPlayer {
@@ -15,7 +16,7 @@ pub struct LevelPlayer {
 
 #[derive(Deserialize, Debug)]
 pub struct LevelData {
-    pub walls: Vec<Vector2Combo>,
+    pub walls: Vec<Segment>,
     pub textures: Vec<String>,
     pub player: LevelPlayer
 }
