@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use log::info;
-use portfolio::consts::LevelData;
+use portfolio::LevelData;
 use portfolio::*;
 use sdl2::libc;
 use once_cell::sync::OnceCell;

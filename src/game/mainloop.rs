@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::ops::DerefMut;
 use std::rc::Rc;
 
@@ -7,6 +8,7 @@ use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+use crate::LevelData;
 use crate::game::renderers::*;
 use crate::game::phys::*;
 use crate::consts::*;
@@ -14,16 +16,22 @@ use crate::math::Vector2;
 use super::state::State;
 
 pub fn setup(level: LevelData) -> State {
+    let mut t_walls = level.walls.clone();
+
+    for wall in t_walls.iter_mut() {
+        wall.segment = wall.segment.clone() * GRID_SIZE;
+    }
+
     let t_level = LevelData {
-        walls: level.walls.iter().map(|x| x.clone() * GRID_SIZE).rev().collect(),
+        walls: t_walls,
         textures: level.textures,
+        links: level.links,
         player: level.player
     };
 
     let state = State {
         pos: t_level.player.pos * GRID_SIZE,
-        dir: -t_level.player.dir,
-        plane: Vector2::zero(),
+        dir: t_level.player.dir,
         rect: Rect::new(0, 0, PLAYER_SIZE, PLAYER_SIZE),
         level: t_level
     };
@@ -31,7 +39,7 @@ pub fn setup(level: LevelData) -> State {
     return state;
 }
 
-fn rotate(rot: f64, state: &mut State) {
+/*fn rotate(rot: f64, state: &mut State) {
     let rot_cos = rot.cos() as f32;
     let rot_sin = rot.sin() as f32;
 
@@ -42,7 +50,7 @@ fn rotate(rot: f64, state: &mut State) {
 
     state.dir.normalize();
     state.plane.normalize();
-}
+}*/
 
 fn process_input(
     e: &sdl2::EventPump,
@@ -68,14 +76,15 @@ fn process_input(
     }
 
     if key_state.is_scancode_pressed(sdl2::keyboard::Scancode::Q) {
-        rotate(-3.0 * 0.016, state);
+        state.dir -= 3.0 * 0.016;
     }
 
     if key_state.is_scancode_pressed(sdl2::keyboard::Scancode::E) {
-        rotate(3.0 * 0.016, state);
+        state.dir += 3.0 * 0.016;
     }
 
     v.normalize();
+    v.rotate(state.dir)
 }
 
 pub fn main_loop(
@@ -90,17 +99,35 @@ pub fn main_loop(
         let mut canvas = rcanvas.borrow_mut();
         let mut vel = Vector2::zero();
 
+        // Process our inputs
         process_input(&events, &mut vel, &mut state);
 
+        // Move if we're allowed to
         attempt_move_to(vel, &mut state);
         state.rect.x = (state.pos.x as i32) - state.rect.w/2;
         state.rect.y = (state.pos.y as i32) - state.rect.h/2;
 
+        // Clear screen
         canvas.set_draw_color(BLACK);
         canvas.clear();
 
+        // Draw player and map
         draw(canvas.deref_mut(), state.deref_mut());
+
+        let res = raycast(
+            state.pos,
+            Vector2::down().rotated(state.dir),
+            state.deref().clone()
+        );
         
+        canvas.set_draw_color(BLUE);
+        if let Some(res) = res {
+            let _ = canvas.draw_line(
+                state.pos.to_point(),
+                res.pos.to_point()
+            );
+        }
+
         canvas.present();
     }
 
